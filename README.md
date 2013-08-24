@@ -4,7 +4,7 @@ What is Wex?
 Wex is a library for using [Skadi](https://github.com/onethirtyfive/skadi)
 which is a [DOTA2](http://www.dota2.com) replay parser.
 
-Wex is an SDL used to define a python object model from raw parser data.
+Wex is an DSL used to define a python object model from raw parser data.
 
 
 What does that mean?
