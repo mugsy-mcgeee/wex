@@ -39,7 +39,7 @@ class Player(Wex):
 
   r_gold   = valueOf('m_iReliableGold')
   u_gold   = valueOf('m_iUnreliableGold')
-  tot_gold = valueOf('m_iTotalEarnedGold')
+  net_gold = valueOf('m_iTotalEarnedGold')
 
 
 
