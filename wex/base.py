@@ -45,4 +45,5 @@ class Hero(Wex):
 
   cur_mana = valueOf('DT_DOTA_BaseNPC m_flMana')
   max_mana = valueOf('DT_DOTA_BaseNPC m_flMaxMana')
+  life_regen = valueOf('DT_DOTA_BaseNPC m_flHealthThinkRegen')
   mana_regen = valueOf('DT_DOTA_BaseNPC m_flManaThinkRegen')
