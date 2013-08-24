@@ -1,12 +1,10 @@
 What is Wex?
 ============
 
-Wex is a library for using [Skadi](https://github.com/onethirtyfive/skadi).
-[Skadi](https://github.com/onethirtyfive/skadi) is a [DOTA2](http://www.dota2.com)
-replay parser.
+Wex is a library for using [Skadi](https://github.com/onethirtyfive/skadi)
+which is a [DOTA2](http://www.dota2.com) replay parser.
 
-Wex is an SDL used to define a python object model from raw 
-[Skadi](https://github.com/onethirtyfive/skadi) parser data.
+Wex is an SDL used to define a python object model from raw parser data.
 
 
 What does that mean?
@@ -14,8 +12,8 @@ What does that mean?
 
 [Skadi](https://github.com/onethirtyfive/skadi) provides access to all of
 the raw parsed data of a DOTA2 replay. For example, if you want to
-see what heroes were selected in a particular replay you could do the
-following using Skadi: 
+list the current life regen rates heroes in a particular replay you could 
+do the following using Skadi: 
 
 ```python
 # Skip Skadi initialization code
@@ -24,23 +22,23 @@ for tick, string_tables, world in demo.stream(tick=10000):
 
   # world contains information about all the entities:
   for ehandle, state in world.find_all_by_dt('DT_DOTA_Unit_Hero*').iteritems():
-    print world.fetch_recv_table(ehandle)
+    print state[(u'DT_DOTA_BaseNPC', u'm_flHealthThinkRegen')]
   break
 ```
 
 And the output would look something like:
 
 ```
-<RecvTable DT_DOTA_Unit_Hero_Rubick (202 props)>
-<RecvTable DT_DOTA_Unit_Hero_BountyHunter (202 props)>
-<RecvTable DT_DOTA_Unit_Hero_WitchDoctor (202 props)>
-<RecvTable DT_DOTA_Unit_Hero_Juggernaut (202 props)>
-<RecvTable DT_DOTA_Unit_Hero_Pudge (202 props)>
-<RecvTable DT_DOTA_Unit_Hero_FacelessVoid (202 props)>
-<RecvTable DT_DOTA_Unit_Hero_Windrunner (202 props)>
-<RecvTable DT_DOTA_Unit_Hero_KeeperOfTheLight (202 props)>
-<RecvTable DT_DOTA_Unit_Hero_Tinker (202 props)>
-<RecvTable DT_DOTA_Unit_Hero_Razor (202 props)>
+1.00122100122
+1.53846153846
+0.732600732601
+1.26984126984
+1.26984126984
+8.79120879121
+0.732600732601
+2.61294261294
+7.98534798535
+1.00122100122
 ```
 
 Wex was created in order to be a layer of abstraction on top of this
@@ -53,23 +51,8 @@ would look like this:
 
 for snap in wex.stream(replay, tick=10000):
   for hero in snap.Hero.all():
-    print hero.hero_type
+    print hero.life_regen
   break
-```
-
-and the output is
-
-```
-DT_DOTA_Unit_Hero_Pudge
-DT_DOTA_Unit_Hero_Razor
-DT_DOTA_Unit_Hero_Juggernaut
-DT_DOTA_Unit_Hero_FacelessVoid
-DT_DOTA_Unit_Hero_KeeperOfTheLight
-DT_DOTA_Unit_Hero_Windrunner
-DT_DOTA_Unit_Hero_BountyHunter
-DT_DOTA_Unit_Hero_WitchDoctor
-DT_DOTA_Unit_Hero_Rubick
-DT_DOTA_Unit_Hero_Tinker
 ```
 
 
@@ -96,6 +79,21 @@ for snap in wex.stream(replay, tick=10000):
 ```
 
 
+Can I still access the raw data?
+================================
+
+Yes! The Wex stream wrapper also provides direct access to the underlying
+raw Skadi data as returned by the stream in the variable 'raw'.
+
+```python
+for snap in wex.stream(replay, tick=10000):
+
+  # access raw Skadi data from the 'raw' var
+  for ehandle, state in snap.raw.world.find_all_by_dt('DT_DOTA_Unit_Hero*').iteritems():
+    print state[(u'DT_DOTA_BaseNPC', u'm_flHealthThinkRegen')]
+```
+
+
 How do I know what Wex objects look like?
 =========================================
 
@@ -105,13 +103,13 @@ that directory. You can see the base definitions in
 [base.py](https://github.com/skadistats/wex/blob/master/wex/base.py).
 You can access any of the wexes for a given game state by using the format:
 
-'''
+```
 <wexsnapshot>.<Wex>.all()
 
 # for example
 snap.Hero.all()
 snap.Player.all()
-'''
+```
 
 
 How do I make my own Wex?
@@ -148,7 +146,7 @@ Now if you're familiar with the DOTA2 replay datatypes you may notice
 that there is no datatype called PlayerResource. However there is
 one called DT_DOTA_PlayerResource. Since every DOTA2 datatype is
 prefixed with either DT_ or DT_DOTA you can leave it off and Wex
-will try to fill it in as necessary.
+will fill it in as necessary.
 
 The next step is to define the attributes that your class will have.
 Simply declare them as class-level variables and assign them values
