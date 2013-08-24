@@ -235,15 +235,20 @@ class Wex(object):
 
     # If entity_str is shortname, perform prefix search
     if not self.src_table.startswith('DT_'):
-      # try DT_DOTA_ first
+      # try DT_DOTA_ 
       search_str = 'DT_DOTA_{}'.format(self.src_table)
       self._offset_based = search_str in OFFSET_BASED
       ents = self._snap._world.find_all_by_dt(search_str).keys()
       if len(ents) == 0: 
-        # try DT_ next
-        search_str = 'DT_{}'.format(self.src_table)
+        # try DT_DOTA 
+        search_str = 'DT_DOTA{}'.format(self.src_table)
         self._offset_based = search_str in OFFSET_BASED
         ents = self._snap._world.find_all_by_dt(search_str).keys()
+        if len(ents) == 0: 
+          # try DT_ 
+          search_str = 'DT_{}'.format(self.src_table)
+          self._offset_based = search_str in OFFSET_BASED
+          ents = self._snap._world.find_all_by_dt(search_str).keys()
     else:
       ents = self._snap._world.find_all_by_dt(self.src_table).keys()
       self._offset_based = self.src_table in OFFSET_BASED
