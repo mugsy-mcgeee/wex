@@ -101,6 +101,26 @@ def stream(demo, tick=0):
     yield snap
 
 
+class Enum(object):
+  def __init__(self, key, val):
+    self.key = key
+    self.val = val
+
+  def __eq__(self, other):
+    if isinstance(other, Enum):
+      return self.key == other.key and self.val == other.val
+    elif isinstance(other, self.val.__class__):
+      return self.val == other
+    else:
+      raise Exception('Invalid comparison type {} == {}'.format(self, other))
+
+  def __ne__(self, other):
+    return not self.__eq__(other)
+
+  def __str__(self):
+    return '<{}:{}>'.format(self.key, self.val)
+
+
 class AsWex(object):
   def __init__(self, wex_cls_str, chain=None):
     self.wex_cls_str = wex_cls_str
@@ -147,6 +167,7 @@ class valueOf(object):
     self.var_access = var_access
     self.merge_func = None
     self._rhs = None
+    self._enum_dict = None
 
     if len(prop_str.split()) == 2:
       self.prop_key = tuple(prop_str.split())
@@ -164,7 +185,7 @@ class valueOf(object):
   def __add__(self, other):
     if not isinstance(other, valueOf):
       raise Exception('Unsupported type ({}) for + operator'.format(other.__class__))
-    dprint'__add__({}, {})'.format(self, other))
+    dprint('__add__({}, {})'.format(self, other))
     self._rhs = other
     self.merge_func = lambda l_val,r_val:l_val+r_val
     return  self
@@ -174,6 +195,18 @@ class valueOf(object):
     o_chain.append(self)
     self.chain = []
     return AsWex(wex_cls_str, o_chain)
+
+  def asEnum(self, enum_dict):
+    """ Since this is called during definition time not eval time
+        we don't have access to the variable we are being assigned
+        to or the object we reside in. Because of this we must
+        enqueue the enum creation step until after the class has
+        been instantiated. Since the Enum values could be accessed
+        before any Wex variables are evaluated we should do the
+        enqued operations the first call to __getattribute__. """
+    self._enum_dict = enum_dict
+    return self
+      
 
   def __call__(self, ctx, snap):
     dprint('valueOf.call({}, ctx={}, chain={})'.format(self.prop_key, ctx, self.chain))
@@ -198,10 +231,14 @@ class valueOf(object):
         # object based instances
         prop_val = snap._world.by_ehandle[wex_obj.id][self.prop_key]
         result = prop_val
+
     # Handle any merging due to operator overloads (__add__, etc)
     if self._rhs is not None:
       r_val = self._rhs(ctx, snap)
       result = self.merge_func(result, self._rhs(ctx, snap))
+    # Handle returning Enum if we are asEnum
+    if self._enum_dict is not None and result in self._enum_dict:
+      result = Enum(self._enum_dict[result], result)
     return result
 
 class var(valueOf):
@@ -247,6 +284,20 @@ class Wex(object):
          isinstance(func, valueOf) or \
          isinstance(func, myDatatype):
         self._props[name] = func
+        
+    self._initialize_enums()
+
+  # META
+  def _initialize_enums(self):
+    cls = self.__class__
+    for name,prop in self._props.iteritems():
+      if hasattr(prop, '_enum_dict') and prop._enum_dict is not None:
+        for v,k in prop._enum_dict.iteritems():
+          if k not in cls.__dict__:
+            setattr(cls, k, Enum(k,v))
+          elif cls.__dict__[k] != Enum(k,v):
+            msg = 'Conflicting Enum values declared for {}.{} ({}/{})'.format(cls, k, cls.__dict__[k], Enum(k,v))
+            raise Exception(msg)
 
   # META
   def _find_my_entities(self):

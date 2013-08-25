@@ -7,9 +7,9 @@ class Player(Wex):
   hero      = valueOf('m_hSelectedHero').asWex('Hero')
   hero_dt   = valueOf('m_hSelectedHero').asWex('Hero').var('hero_type')
 
-  team = valueOf('m_iPlayerTeams') # 2: Radiant
-                                   # 3: Dire
-                                   # 5: Spectator
+  team = valueOf('m_iPlayerTeams').asEnum({2: 'RADIANT',
+                                           3: 'DIRE',
+                                           5: 'SPECTATOR'})
 
   conn_state = valueOf('m_iConnectionState')
   steam_id   = valueOf('m_iPlayerSteamIDs')
@@ -48,9 +48,9 @@ class Player(Wex):
 class Hero(Wex):
   hero_type = myDatatype()
 
-  state = valueOf('DT_DOTA_BaseNPC m_lifeState') # 0: Alive
-                                                 # 1: Dying
-                                                 # 2: Dead
+  state = valueOf('DT_DOTA_BaseNPC m_lifeState').asEnum({0: 'ALIVE',
+                                                         1: 'DYING',
+                                                         2: 'DEAD'})
 
   cur_xp = valueOf('DT_DOTA_BaseNPC_Hero m_iCurrentXP')
   level  = valueOf('DT_DOTA_BaseNPC m_iCurrentLevel')
@@ -72,35 +72,35 @@ class GameRules(Wex):
   start_time = valueOf('DT_DOTAGamerules m_flGameStartTime')
   end_time   = valueOf('DT_DOTAGamerules m_flGameEndTime')
 
-  state = valueOf('DT_DOTAGamerules m_nGameState') # 1: Players loading
-                                                   # 2: Pick/Ban in CM
-                                                   # 4: Pre-game 
-                                                   # 5: Game clock hist 0:00
-                                                   # 6: End game (scoreboard)
+  state = valueOf('DT_DOTAGamerules m_nGameState').asEnum({1: 'LOADING',
+                                                           2: 'CM_PICK',
+                                                           4: 'PRE_GAME',
+                                                           5: 'STARTED',   # After 0:00
+                                                           6: 'END_GAME'}) # scoreboard
 
-  mode = valueOf('DT_DOTAGamerules m_iGameMode') # 1: All pick
-                                                 # 2: Captain's Mode
-                                                 # 3: Random draft
-                                                 # 4: Single draft
-                                                 # 5: All random
-                                                 # 8: Reverse captain's mode
+  mode = valueOf('DT_DOTAGamerules m_iGameMode').asEnum({1: 'MODE_ALL',
+                                                         2: 'MODE_CM',
+                                                         3: 'MODE_RANDOM',
+                                                         4: 'MODE_DRAFT',
+                                                         5: 'MODE_ALL_RANDOM',
+                                                         8: 'MODE_REVERSE_CM'})
 
-  first_pick = valueOf('DT_DOTAGamerules m_iStartingTeam') # 0: Not CM game
-                                                           # 2: Radiant first 
-                                                           # 3: Dire first 
+  first_pick = valueOf('DT_DOTAGamerules m_iStartingTeam').asEnum({0: 'NOT_CM',
+                                                                   2: 'RADIANT',
+                                                                   3: 'DIRE'})
 
-  active_pick = valueOf('DT_DOTAGamerules m_ActiveTeam') # 2: Radiant
-                                                         # 3: Dire
+  active_pick = valueOf('DT_DOTAGamerules m_ActiveTeam').asEnum({2: 'RADIANT',
+                                                                 3: 'DIRE'})
 
-  winner = valueOf('DT_DOTAGamerules m_nGameWinner') # 5: No winner
-                                                     # 2: Radiant
-                                                     # 3: Dire
+  winner = valueOf('DT_DOTAGamerules m_nGameWinner').asEnum({5: 'NO_WINNER',
+                                                             2: 'RADIANT',
+                                                             3: 'DIRE'})
 
 
 @source('Team')
 class Team(Wex):
-  side = valueOf('DT_Team m_iTeamNum') # 2: Radiant
-                                       # 3: Dire
+  side = valueOf('DT_Team m_iTeamNum').asEnum({2: 'RADIANT',
+                                               3: 'DIRE'})
   name    = valueOf('DT_Team m_szTeamname')
   tag     = valueOf('DT_DOTATeam m_szTag')
   team_id = valueOf('DT_DOTATeam m_unTournamentTeamID')
