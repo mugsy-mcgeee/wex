@@ -37,6 +37,7 @@ class Player(Wex):
   lasthits = valueOf('m_iLastHitCount')
   denies   = valueOf('m_iDenyCount')
 
+  gold     = var('r_gold') + var('u_gold')
   r_gold   = valueOf('m_iReliableGold')
   u_gold   = valueOf('m_iUnreliableGold')
   net_gold = valueOf('m_iTotalEarnedGold')

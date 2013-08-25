@@ -145,7 +145,8 @@ class valueOf(object):
     self.chain = chain or []
     dprint('{}valueOf({}, chain={})'.format('\t'*len(self.chain), prop_str, chain))
     self.var_access = var_access
-    self.trans_func = lambda wex_obj,self,val,world:val
+    self.merge_func = None
+    self._rhs = None
 
     if len(prop_str.split()) == 2:
       self.prop_key = tuple(prop_str.split())
@@ -160,6 +161,14 @@ class valueOf(object):
       else:
         self.is_handle = False
 
+  def __add__(self, other):
+    if not isinstance(other, valueOf):
+      raise Exception('Unsupported type ({}) for + operator'.format(other.__class__))
+    dprint'__add__({}, {})'.format(self, other))
+    self._rhs = other
+    self.merge_func = lambda l_val,r_val:l_val+r_val
+    return  self
+
   def asWex(self, wex_cls_str):
     o_chain = self.chain
     o_chain.append(self)
@@ -172,8 +181,9 @@ class valueOf(object):
       ctx = _func(ctx, snap)
     wex_obj = ctx
 
+    result = None
     if self.var_access:
-      return getattr(wex_obj, self.prop_key)
+      result = getattr(wex_obj, self.prop_key)
     else:
       if wex_obj._offset_based:
         try:
@@ -183,11 +193,20 @@ class valueOf(object):
         # offset based instances
         data_set = snap._world.by_ehandle[ehandle]
         key = (self.prop_key, str(offset).zfill(4))
-        return data_set[key]
+        result = data_set[key]
       else: 
         # object based instances
         prop_val = snap._world.by_ehandle[wex_obj.id][self.prop_key]
-        return prop_val
+        result = prop_val
+    # Handle any merging due to operator overloads (__add__, etc)
+    if self._rhs is not None:
+      r_val = self._rhs(ctx, snap)
+      result = self.merge_func(result, self._rhs(ctx, snap))
+    return result
+
+class var(valueOf):
+  def __init__(self, prop_str, chain=None, var_access=True):
+    super(var, self).__init__(prop_str, chain, var_access)
 
 
 class myDatatype(object):
