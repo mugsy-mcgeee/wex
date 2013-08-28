@@ -85,10 +85,13 @@ class WexSnapshot(object):
 def stream(demo, tick=0):
   wex_pkgs = load_wex()
 
-  for data in demo.stream(tick=tick):
-    world = data[2]
+  stream_obj = demo.stream(tick=tick)
+  str_table = stream_obj.string_tables
+  for data in stream_obj:
+    world = data[3]
 
     snap = WexSnapshot(wex_pkgs)
+    snap.string_tables = str_table
     snap.raw = data
     snap._world = world
     for wex in wex_pkgs:
