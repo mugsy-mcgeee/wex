@@ -63,10 +63,11 @@ class WexSnapshot(object):
   def __init__(self, wex_pkgs):
     self.wex_pkgs = wex_pkgs
     self.raw = None
+    self.tick = -1
 
   def get_wex_inst(self, cls):
     cls_str = '{}.{}'.format(cls.__module__, cls.__name__)
-  
+
     for wex in self.wex_pkgs:
       wex_str = '{}.{}'.format(wex.__class__.__module__, wex.__class__.__name__)
       if wex_str == cls_str:
@@ -74,7 +75,7 @@ class WexSnapshot(object):
     print '{} not found in wex_pkgs:\n'.format(cls_name)
     print 'wex_pkgs={}'.format(wex_pkgs)
     return None
-  
+
   def find_wex_class(self, cls_name):
     for wex in self.wex_pkgs:
       if wex.__class__.__name__ == cls_name:
@@ -87,15 +88,17 @@ def stream(demo, tick=0):
 
   stream_obj = demo.stream(tick=tick)
   str_table = stream_obj.string_tables
+  prologue = stream_obj.prologue
   for data in stream_obj:
-    world = data[3]
+    tick, user_msgs, game_evts, world, mods = data
 
     snap = WexSnapshot(wex_pkgs)
+    snap.tick = tick
     snap.string_tables = str_table
     snap.raw = data
     snap._world = world
+    snap._prologue = prologue
     for wex in wex_pkgs:
-      # pass world state to wex classes
       wex._world = world
       wex._snap = snap
 
@@ -209,7 +212,7 @@ class valueOf(object):
         enqued operations the first call to __getattribute__. """
     self._enum_dict = enum_dict
     return self
-      
+
 
   def __call__(self, ctx, snap):
     dprint('valueOf.call({}, ctx={}, chain={})'.format(self.prop_key, ctx, self.chain))
@@ -230,7 +233,7 @@ class valueOf(object):
         data_set = snap._world.by_ehandle[ehandle]
         key = (self.prop_key, str(offset).zfill(4))
         result = data_set[key]
-      else: 
+      else:
         # object based instances
         prop_val = snap._world.by_ehandle[wex_obj.id][self.prop_key]
         result = prop_val
@@ -287,7 +290,7 @@ class Wex(object):
          isinstance(func, valueOf) or \
          isinstance(func, myDatatype):
         self._props[name] = func
-        
+
     self._initialize_enums()
 
   # META
@@ -308,17 +311,17 @@ class Wex(object):
 
     # If entity_str is shortname, perform prefix search
     if not self.src_table.startswith('DT_'):
-      # try DT_DOTA_ 
+      # try DT_DOTA_
       search_str = 'DT_DOTA_{}'.format(self.src_table)
       self._offset_based = search_str in OFFSET_BASED
       ents = self._snap._world.find_all_by_dt(search_str).keys()
-      if len(ents) == 0: 
-        # try DT_DOTA 
+      if len(ents) == 0:
+        # try DT_DOTA
         search_str = 'DT_DOTA{}'.format(self.src_table)
         self._offset_based = search_str in OFFSET_BASED
         ents = self._snap._world.find_all_by_dt(search_str).keys()
-        if len(ents) == 0: 
-          # try DT_ 
+        if len(ents) == 0:
+          # try DT_
           search_str = 'DT_{}'.format(self.src_table)
           self._offset_based = search_str in OFFSET_BASED
           ents = self._snap._world.find_all_by_dt(search_str).keys()
